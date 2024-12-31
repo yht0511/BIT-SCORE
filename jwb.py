@@ -96,7 +96,7 @@ class jwb:
     def wait_for_update(self,last:dict):
         res=self.get()
         while res == last:
-            time.sleep(settings.refresh_token_interval)
+            time.sleep(settings.refresh_interval)
             res=self.get()
             open("log.txt",mode="w",encoding="utf-8").write(f"更新时间:{time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())}\nData:{res}\n")
         return res

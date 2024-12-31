@@ -2,8 +2,10 @@ import time
 import jwb
 import json
 import utils
+import os
 
 if __name__ == "__main__":
+    utils.send_email("程序启动","成绩监测程序已启动.")
     while True:
         try:
             # 读取旧的成绩
