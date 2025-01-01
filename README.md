@@ -25,6 +25,7 @@ docker run -d \
     -e MAIL_USER=邮箱用户名 \
     -e MAIL_PASS=邮箱密码 \
     -e MAIL_TARGETS=接收通知的邮箱(以逗号分隔) \
+    -e TZ=Asia/Shanghai \
     bit-score:v1
 ```
 
@@ -40,6 +41,7 @@ docker run -d \
     -e MAIL_USER=邮箱用户名 \
     -e MAIL_PASS=邮箱密码 \
     -e MAIL_TARGETS=接收通知的邮箱(以逗号分隔) \
+    -e TZ=Asia/Shanghai \
     yht0511/bit-score:v1
 ```
 
