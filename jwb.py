@@ -83,7 +83,7 @@ class jwb:
         return {
             'average':class_detail[0].string,
             'max':class_detail[1].string,
-            'class_proportion':class_detail[1].string,
+            'class_proportion':self_detail[1].string,
             'major_proportion':self_detail[2].string,
             'school_proportion':self_detail[3].string,
         }
