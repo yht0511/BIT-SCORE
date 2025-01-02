@@ -31,6 +31,8 @@ if os.getenv("MAIL_TARGETS"):
     mail_targets = os.getenv("MAIL_TARGETS").split(",")
 if os.getenv("MAIL_TITLE"):
     mail_title = os.getenv("MAIL_TITLE")
+if os.getenv("REFRESH_INTERVAL"):
+    refresh_interval = int(os.getenv("REFRESH_INTERVAL"))
 
 # 检查设置
 if not student_code or not password or not mail_host or not mail_user or not mail_pass or not mail_targets:
