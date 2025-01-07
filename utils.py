@@ -38,3 +38,15 @@ def send_email(subject,message):
             print(e)
     print("Error: 无法发送邮件")
     return False
+
+def check_update(last,data):
+    updates=[]
+    for i in data:
+        t=False
+        for j in last:
+            if i["course"] == j["course"]:
+                t=True
+                break
+        if not t:
+            updates.append(i)
+    return updates

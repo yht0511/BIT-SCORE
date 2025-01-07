@@ -1,6 +1,7 @@
 import time
 import requests
 import settings
+import utils
 import webvpn
 from bs4 import BeautifulSoup
 
@@ -95,7 +96,7 @@ class jwb:
     
     def wait_for_update(self,last:dict):
         res=self.get()
-        while res == last:
+        while utils.check_update(last,res)==[]:
             time.sleep(settings.refresh_interval)
             res=self.get()
             open("log.txt",mode="w",encoding="utf-8").write(f"更新时间:{time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())}\nData:{res}\n")
