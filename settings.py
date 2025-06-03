@@ -2,7 +2,7 @@
 # 网站的URL
 URL = 'https://webvpn.bit.edu.cn/http/77726476706e69737468656265737421fae04c8f69326144300d8db9d6562d'
 # token刷新间隔
-refresh_interval = 30 # 每隔30秒刷新一次
+refresh_interval = 5 # 每隔30秒刷新一次
 
 # 设置
 # 学号

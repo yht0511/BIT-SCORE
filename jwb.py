@@ -2,7 +2,7 @@ import time
 import requests
 import settings
 import utils
-import webvpn
+import bit_login
 from bs4 import BeautifulSoup
 
 class jwb:
@@ -13,25 +13,25 @@ class jwb:
         self.headers = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
-            'Cache-Control': 'max-age=0',
+            'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
-            'Origin': 'https://webvpn.bit.edu.cn',
-            'Referer': 'https://webvpn.bit.edu.cn/http/77726476706e69737468656265737421fae04c8f69326144300d8db9d6562d/jsxsd/kscj/cjcx_query?Ves632DSdyV=NEW_XSD_XJCJ',
+            'Pragma': 'no-cache',
+            'Host': 'webvpn.bit.edu.cn',
             'Sec-Fetch-Dest': 'document',
             'Sec-Fetch-Mode': 'navigate',
             'Sec-Fetch-Site': 'same-origin',
             'Sec-Fetch-User': '?1',
             'Upgrade-Insecure-Requests': '1',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0',
-            'sec-ch-ua': '"Microsoft Edge";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 Edg/136.0.0.0',
+            'sec-ch-ua': '"Chromium";v="136", "Microsoft Edge";v="136", "Not.A/Brand";v="99"',
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"Windows"',
         }
-        
         self.refresh()
         
     def refresh(self):
-        self.headers["Cookie"]=webvpn.login(self.username,self.password,settings.URL)
+        self.headers["Cookie"]=bit_login.jwb_login().login(self.username,self.password)
+        print(self.headers["Cookie"])
 
     def get(self):
         data = {
@@ -40,8 +40,7 @@ class jwb:
             'kcmc': '',
             'xsfs': 'all',
         }
-
-        response = requests.post('https://webvpn.bit.edu.cn/http/77726476706e69737468656265737421fae04c8f69326144300d8db9d6562d/jsxsd/kscj/cjcx_list', headers=self.headers, data=data)
+        response = requests.post(f'{settings.URL}/jsxsd/kscj/cjcx_list', headers=self.headers, data=data)
         if not self.check(response.text):
             self.refresh()
             return self.get()
@@ -70,7 +69,16 @@ class jwb:
                 'credit':data[6].string,
             }
             # 合并
-            t.update(self.get_detail(settings.URL+data[-1].find('a')["onclick"].split("JsMod('")[1].split("'")[0]))
+            if data[-1].find('a'):
+                t.update(self.get_detail(settings.URL+data[-1].find('a')["onclick"].split("JsMod('")[1].split("'")[0]))
+            else:
+                t.update({
+                    'average': None,
+                    'max': None,
+                    'class_proportion': None,
+                    'major_proportion': None,
+                    'school_proportion': None,
+                })
             res.append(t)
             print(t)
         return res
@@ -90,7 +98,7 @@ class jwb:
         }
     
     def check(self,data):
-        if "滑块验证码" in data:
+        if "通行密钥认证" in data:
             return False
         return True
     
