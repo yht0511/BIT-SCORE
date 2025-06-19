@@ -30,8 +30,7 @@ class jwb:
         self.refresh()
         
     def refresh(self):
-        self.headers["Cookie"]=bit_login.jwb_login().login(self.username,self.password)
-        print(self.headers["Cookie"])
+        self.headers["Cookie"]=bit_login.jwb_login().login(self.username,self.password)["cookie"]
 
     def get(self):
         data = {
@@ -80,7 +79,6 @@ class jwb:
                     'school_proportion': None,
                 })
             res.append(t)
-            print(t)
         return res
     
     def parse_detail(self,data):
