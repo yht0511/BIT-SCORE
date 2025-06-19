@@ -10,7 +10,7 @@ if __name__ == "__main__":
         try:
             # 读取旧的成绩
             try:
-                with open("data.json",mode="r",encoding="utf-8") as f:
+                with open("data/data.json",mode="r",encoding="utf-8") as f:
                     data = json.load(f)
             except:
                 data = []
@@ -24,7 +24,7 @@ if __name__ == "__main__":
                     utils.send_emails(f"成绩更新:{i['course']}",f"成绩:{i['score']}\n姓名:{i['student']}\n课程:{i['course']}\n学分:{i['credit']}\n{i['average']}\n{i['max']}\n{i['class_proportion']}\n{i['major_proportion']}\n{i['school_proportion']}\n更新时间:{time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())}",settings.mail_targets)
                     utils.send_emails(f"成绩更新:{i['course']}",f"课程:{i['course']}\n学分:{i['credit']}\n{i['average']}\n更新时间:{time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())}",settings.mail_anonymous)
                 data=res
-                with open("data.json",mode="w",encoding="utf-8") as f:
+                with open("data/data.json",mode="w",encoding="utf-8") as f:
                     json.dump(data,f,ensure_ascii=False,indent=4)
         except ZeroDivisionError as e:
             utils.send_email("程序异常",str(e))
