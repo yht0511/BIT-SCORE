@@ -13,8 +13,7 @@ def send_emails(subject,message,targets):
     
     for i in range(3):
         try:
-            smtpObj = smtplib.SMTP(settings.mail_host, 25,timeout=10)
-            # smtpObj.starttls()
+            smtpObj = smtplib.SMTP(settings.mail_host, 587,timeout=10)
             smtpObj.login(settings.mail_user,settings.mail_pass)  
             smtpObj.sendmail(settings.mail_user, targets, message.as_string())
             print("邮件发送成功")
