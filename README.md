@@ -42,7 +42,7 @@ docker run -d \
     -e MAIL_PASS=邮箱密码 \
     -e MAIL_TARGETS=接收通知的邮箱(以逗号分隔) \
     -e TZ=Asia/Shanghai \
-    yht0511/bit-score:v1
+    yht0511/bit-score:latest
 ```
 
 #### ENJOY!
