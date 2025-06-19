@@ -5,7 +5,7 @@ import utils
 import settings
 
 if __name__ == "__main__":
-    utils.send_emails("程序启动","成绩监测程序已启动.",settings.mail_targets+settings.mail_anonymous)
+    utils.send_emails_setup(settings.mail_targets)
     while True:
         try:
             # 读取旧的成绩
@@ -21,8 +21,7 @@ if __name__ == "__main__":
             while True:
                 res=j.wait_for_update(data)
                 for i in utils.check_update(data,res):
-                    utils.send_emails(f"成绩更新:{i['course']}",f"成绩:{i['score']}\n姓名:{i['student']}\n课程:{i['course']}\n学分:{i['credit']}\n{i['average']}\n{i['max']}\n{i['class_proportion']}\n{i['major_proportion']}\n{i['school_proportion']}\n更新时间:{time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())}",settings.mail_targets)
-                    utils.send_emails(f"成绩更新:{i['course']}",f"课程:{i['course']}\n学分:{i['credit']}\n{i['average']}\n更新时间:{time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())}",settings.mail_anonymous)
+                    utils.send_score(i['score'],i['student'],i['course'],i['credit'],i['average'],i['max'],i['class_proportion'],i['major_proportion'],i['school_proportion'])
                 data=res
                 with open("data/data.json",mode="w",encoding="utf-8") as f:
                     json.dump(data,f,ensure_ascii=False,indent=4)

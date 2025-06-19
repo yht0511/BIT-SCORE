@@ -88,11 +88,11 @@ class jwb:
         class_detail=class_detail.find_all("td")
         self_detail=dataLists[2].find_all("td")
         return {
-            'average':class_detail[0].string,
-            'max':class_detail[1].string,
-            'class_proportion':self_detail[1].string,
-            'major_proportion':self_detail[2].string,
-            'school_proportion':self_detail[3].string,
+            'average':class_detail[0].string.split("：")[-1],
+            'max':class_detail[1].string.split("：")[-1],
+            'class_proportion':self_detail[1].string.split("：")[-1],
+            'major_proportion':self_detail[2].string.split("：")[-1],
+            'school_proportion':self_detail[3].string.split("：")[-1],
         }
     
     def check(self,data):
@@ -103,8 +103,8 @@ class jwb:
     def wait_for_update(self,last:dict):
         res=self.get()
         while utils.check_update(last,res)==[]:
-            time.sleep(settings.refresh_interval)
             res=self.get()
-            open("log.txt",mode="w",encoding="utf-8").write(f"更新时间:{time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())}\nData:{res}\n")
+            open("data/log.txt",mode="w",encoding="utf-8").write(f"更新时间:{time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())}\nData:{res}\n")
+            time.sleep(settings.refresh_interval)
         return res
 
