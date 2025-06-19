@@ -13,6 +13,7 @@ mail_host='' # 在此处邮箱smtp服务器
 mail_user = '' # 在此处邮箱账号
 mail_pass = '' # 在此处邮箱密码
 mail_targets = [] # 在此处填写接收邮箱
+mail_anonymous = [] # 在此处填写接收异常的邮箱
 mail_title = "TECLAB-成绩查询系统"
 
 # 从环境变量中读取设置
@@ -29,11 +30,13 @@ if os.getenv("MAIL_PASS"):
     mail_pass = os.getenv("MAIL_PASS")
 if os.getenv("MAIL_TARGETS"):
     mail_targets = os.getenv("MAIL_TARGETS").split(",")
+if os.getenv("MAIL_ANONYMOUS"):
+    mail_anonymous = os.getenv("MAIL_ANONYMOUS").split(",")
 if os.getenv("MAIL_TITLE"):
     mail_title = os.getenv("MAIL_TITLE")
 if os.getenv("REFRESH_INTERVAL"):
     refresh_interval = int(os.getenv("REFRESH_INTERVAL"))
 
 # 检查设置
-# if not student_code or not password or not mail_host or not mail_user or not mail_pass or not mail_targets:
-#     raise Exception("缺少必要设置!请检查在settings.py中填写学号,密码,邮箱各参数或设置环境变量STUDENT_CODE,PASSWORD,MAIL_HOST,MAIL_USER,MAIL_PASS,MAIL_TARGETS")
+if not student_code or not password or not mail_host or not mail_user or not mail_pass or not mail_targets:
+    raise Exception("缺少必要设置!请检查在settings.py中填写学号,密码,邮箱各参数或设置环境变量STUDENT_CODE,PASSWORD,MAIL_HOST,MAIL_USER,MAIL_PASS,MAIL_TARGETS")

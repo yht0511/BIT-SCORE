@@ -34,7 +34,7 @@ class jwb:
 
     def get(self):
         data = {
-            'kksj': '',
+            'kksj': utils.get_current_kksj(),
             'kcxz': '',
             'kcmc': '',
             'xsfs': 'all',
