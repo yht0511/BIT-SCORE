@@ -25,6 +25,6 @@ if __name__ == "__main__":
                 data=res
                 with open("data/data.json",mode="w",encoding="utf-8") as f:
                     json.dump(data,f,ensure_ascii=False,indent=4)
-        except ZeroDivisionError as e:
+        except Exception as e:
             utils.send_email("程序异常",str(e))
             time.sleep(1)
