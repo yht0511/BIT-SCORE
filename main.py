@@ -26,5 +26,5 @@ if __name__ == "__main__":
                 with open("data/data.json",mode="w",encoding="utf-8") as f:
                     json.dump(data,f,ensure_ascii=False,indent=4)
         except Exception as e:
-            utils.send_email("程序异常",str(e))
+            print(f"发生异常: {e}")
             time.sleep(1)
