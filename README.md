@@ -2,7 +2,7 @@
 
 ## 简介
 
-使用自动化程序每隔30s就检查一遍你的成绩是否更新，并使用邮件第一时间通知你~
+使用自动化程序每隔5s就检查一遍你的成绩是否更新，并使用邮件第一时间通知你~
 
 支持docker一键化部署!
 
@@ -25,6 +25,9 @@ docker run -d \
     -e MAIL_USER=邮箱用户名 \
     -e MAIL_PASS=邮箱密码 \
     -e MAIL_TARGETS=接收通知的邮箱(以逗号分隔) \
+    -e MAIL_PORT=SMTP服务器端口(默认587) \
+    -e MAIL_SSL=true \ 
+    -e REFRESH_INTERVAL=每隔几秒查一次(默认5s) \ 
     -e TZ=Asia/Shanghai \
     bit-score:v1
 ```
@@ -41,6 +44,9 @@ docker run -d \
     -e MAIL_USER=邮箱用户名 \
     -e MAIL_PASS=邮箱密码 \
     -e MAIL_TARGETS=接收通知的邮箱(以逗号分隔) \
+    -e MAIL_PORT=SMTP服务器端口(默认587) \
+    -e MAIL_SSL=true \
+    -e REFRESH_INTERVAL=每隔几秒查一次(默认5s) \
     -e TZ=Asia/Shanghai \
     yht0511/bit-score:latest
 ```

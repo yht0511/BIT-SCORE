@@ -1,5 +1,7 @@
 import smtplib
+import ssl
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from email.header import Header
 from email.utils import formataddr
 import settings
@@ -14,15 +16,42 @@ def send_emails(subject,message,targets):
     
     for i in range(3):
         try:
-            smtpObj = smtplib.SMTP(settings.mail_host, 587,timeout=10)
-            smtpObj.login(settings.mail_user,settings.mail_pass)  
+            smtpObj = get_smtp_connection()
+            if not smtpObj:
+                print("Error: 无法连接到邮件服务器")
+                continue
             smtpObj.sendmail(settings.mail_user, targets, message.as_string())
+            smtpObj.quit()
             print("邮件发送成功")
             return True
         except Exception as e:
             print(e)
     print("Error: 无法发送邮件")
     return False
+
+def get_smtp_connection():
+    """根据端口和SSL设置获取SMTP连接"""
+    try:
+        if settings.mail_port == 465:
+            context = ssl.create_default_context()
+            server = smtplib.SMTP_SSL(settings.mail_server, settings.mail_port, context=context, timeout=10)
+        elif settings.mail_port == 587:
+            server = smtplib.SMTP(settings.mail_server, settings.mail_port, timeout=10)
+            if settings.mail_ssl: server.starttls()
+        elif settings.mail_port == 25:
+            if settings.mail_ssl:
+                context = ssl.create_default_context()
+                server = smtplib.SMTP_SSL(settings.mail_server, settings.mail_port, context=context, timeout=10)
+            else:
+                server = smtplib.SMTP(settings.mail_server, settings.mail_port, timeout=10)
+        else:
+            raise ValueError("不支持的邮件端口: {}".format(settings.mail_port))
+        
+        server.login(settings.mail_user, settings.mail_password)
+        return server
+    except Exception as e:
+        print(f"邮件服务器连接失败: {e}")
+        return None
 
 def send_emails_setup(targets):
     subject="TECLAB-成绩监测系统"
@@ -294,8 +323,7 @@ def send_emails_anonymous(course,credit,average,max):
     更新时间：{{ update_time }}
     <br/>
             &copy; 2025 TECLAB | BIT-SCORE 成绩监测系统
-            </div>
-  </div>
+    </div>
   </div>
 </body>
 </html>"""
@@ -332,6 +360,7 @@ def get_current_kksj():
     if 4 <= now.month <= 9:
         semester = f"{year - 1}-{year}-2"
     return semester
+
 
 
 
