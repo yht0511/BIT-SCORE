@@ -34,20 +34,20 @@ def get_smtp_connection():
     try:
         if settings.mail_port == 465:
             context = ssl.create_default_context()
-            server = smtplib.SMTP_SSL(settings.mail_server, settings.mail_port, context=context, timeout=10)
+            server = smtplib.SMTP_SSL(settings.mail_host, settings.mail_port, context=context, timeout=10)
         elif settings.mail_port == 587:
-            server = smtplib.SMTP(settings.mail_server, settings.mail_port, timeout=10)
+            server = smtplib.SMTP(settings.mail_host, settings.mail_port, timeout=10)
             if settings.mail_ssl: server.starttls()
         elif settings.mail_port == 25:
             if settings.mail_ssl:
                 context = ssl.create_default_context()
-                server = smtplib.SMTP_SSL(settings.mail_server, settings.mail_port, context=context, timeout=10)
+                server = smtplib.SMTP_SSL(settings.mail_host, settings.mail_port, context=context, timeout=10)
             else:
-                server = smtplib.SMTP(settings.mail_server, settings.mail_port, timeout=10)
+                server = smtplib.SMTP(settings.mail_host, settings.mail_port, timeout=10)
         else:
             raise ValueError("不支持的邮件端口: {}".format(settings.mail_port))
         
-        server.login(settings.mail_user, settings.mail_password)
+        server.login(settings.mail_user, settings.mail_pass)
         return server
     except Exception as e:
         print(f"邮件服务器连接失败: {e}")
