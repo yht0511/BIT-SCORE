@@ -116,10 +116,11 @@ class jwb:
             'https://jxzxehallapp.bit.edu.cn/jwapp/sys/xsfacx/modules/pyfacxepg/grpyfacx.do',
             headers=self.jxzxehall_headers,
         )
-        if not self.check(response.text):
+        try:
+            res_json = response.json()
+        except:
             self.refresh()
             return self.get_base_data()
-        res_json = response.json()
         data = {
             "name": res_json["datas"]["grpyfacx"]["rows"][0]["XM"],
             "student_code": res_json["datas"]["grpyfacx"]["rows"][0]["XH"],
