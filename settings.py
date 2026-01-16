@@ -2,7 +2,7 @@
 # 网站的URL
 URL = 'https://jwms.bit.edu.cn/'
 # token刷新间隔
-refresh_interval = 5 # 每隔5秒刷新一次
+refresh_interval = 3 # 每隔3秒刷新一次
 
 # 设置
 # 学号

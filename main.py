@@ -48,11 +48,13 @@ if __name__ == "__main__":
                         has_change = True
                 except Exception as e:
                     print(f"检查成绩更新时出错: {e}")
+                    j.refresh()
 
                 # 检查学分更新
                 try:
                     res2 = j.get_base_data()
                     last_student = data.get("student", {})
+                    print(res2)
                     # 比较关键字段
                     if str(last_student.get('total_credit')) != str(res2.get('total_credit')) or \
                        str(last_student.get('completed_credit')) != str(res2.get('completed_credit')):
@@ -69,7 +71,7 @@ if __name__ == "__main__":
                         json.dump(data,f,ensure_ascii=False,indent=4)
                 
                 # 记录日志
-                # open("data/log.txt",mode="w",encoding="utf-8").write(f"最后检查时间:{time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())}\n")
+                open("data/log.txt",mode="w",encoding="utf-8").write(f"最后检查时间:{time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())}\n")
                 
                 time.sleep(settings.refresh_interval)
 
