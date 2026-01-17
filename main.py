@@ -65,7 +65,7 @@ if __name__ == "__main__":
                     if str(last_student.get('total_credit')) != str(res2.get('total_credit')) or \
                        str(last_student.get('completed_credit')) != str(res2.get('completed_credit')):
                         print("检测到学分更新")
-                        utils.send_credit(res2['name'], res2['completed_credit'], res2['total_credit'])
+                        utils.send_credit(res2['name'], res2['completed_credit'], res2['total_credit'], int(res2['completed_credit']) - int(last_student.get('completed_credit', 0)))
                         data["student"] = res2
                         has_change = True
                 except Exception as e:

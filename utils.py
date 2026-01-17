@@ -385,7 +385,7 @@ def get_all_kksj(user):
                 semesters.append(f"{y}-{y + 1}-2")
     return semesters
 
-def send_credit(student_name, completed_credit, total_credit):
+def send_credit(student_name, completed_credit, total_credit, offset_credit=0):
     message="""<!DOCTYPE html>
 <html lang="zh-cn">
 <head>
@@ -448,6 +448,7 @@ def send_credit(student_name, completed_credit, total_credit):
       <li><span class="label">姓名：</span>{{ student }}</li>
       <li><span class="label">已修学分：</span>{{ completed_credit }}</li>
       <li><span class="label">总学分：</span>{{ total_credit }}</li>
+      <li><span class="label">新增学分：</span>{{ offset_credit }}</li>
     </ul>
     <div class="footer">
     更新时间：{{ update_time }}
@@ -460,6 +461,8 @@ def send_credit(student_name, completed_credit, total_credit):
     message=message.replace("{{ student }}", str(student_name))
     message=message.replace("{{ completed_credit }}", str(completed_credit))
     message=message.replace("{{ total_credit }}", str(total_credit))
+    message=message.replace("{{ offset_credit }}", str(offset_credit))
     message=message.replace("{{ update_time }}",datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    print("发送学分变动邮件...")
     send_emails(f"学分变动通知",message,settings.mail_targets)
 

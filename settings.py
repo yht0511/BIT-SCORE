@@ -6,8 +6,8 @@ refresh_interval = 1 # 每隔1秒刷新一次
 
 # 设置
 # 学号
-student_code='' # 在此处填写学号
-password='' # 在此处填写密码
+student_code='1120243366' # 在此处填写学号
+password='Www.2464251357' # 在此处填写密码
 # 邮箱
 
 mail_host='' # 在此处邮箱smtp服务器
@@ -60,5 +60,5 @@ if not os.path.exists("data/"):
     os.makedirs("data/")
 
 # 检查设置
-if not student_code or not password or not mail_host or not mail_user or not mail_pass or not mail_targets:
-    raise Exception("缺少必要设置!请检查在settings.py中填写学号,密码,邮箱各参数或设置环境变量STUDENT_CODE,PASSWORD,MAIL_HOST,MAIL_USER,MAIL_PASS,MAIL_TARGETS")
+# if not student_code or not password or not mail_host or not mail_user or not mail_pass or not mail_targets:
+#     raise Exception("缺少必要设置!请检查在settings.py中填写学号,密码,邮箱各参数或设置环境变量STUDENT_CODE,PASSWORD,MAIL_HOST,MAIL_USER,MAIL_PASS,MAIL_TARGETS")
