@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BIT-SCORE 仪表盘</title>
+    <link
+      href="https://cdn.jsdelivr.net.cn/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net.cn/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"
+    />
+    <style>
+      body {
+        background-color: #f0f2f5;
+      }
+      .navbar {
+        background: #fff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+      }
+      .card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        transition: transform 0.2s;
+        margin-bottom: 1.5rem;
+      }
+      .card:hover {
+        transform: translateY(-2px);
+      }
+      .stat-label {
+        color: #6c757d;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #2c3e50;
+      }
+      .stat-sub {
+        font-size: 0.8rem;
+        color: #95a5a6;
+      }
+      .table-responsive {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+      }
+      .score-excellent {
+        color: #27ae60;
+        font-weight: bold;
+      }
+      .score-good {
+        color: #2ecc71;
+        font-weight: bold;
+      }
+      .score-pass {
+        color: #f39c12;
+      }
+      .score-fail {
+        color: #e74c3c;
+        font-weight: bold;
+      }
+
+      .badge-type {
+        background-color: #eef2f7;
+        color: #5a6a85;
+      }
+
+      [v-cloak] {
+        display: none;
+      }
+
+      .scale-text {
+        transform: scale(0.9);
+      }
+      .score-card {
+        transition: all 0.3s ease;
+        border-left: 5px solid transparent;
+      }
+      .score-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1) !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app" v-cloak>
+      <nav class="navbar navbar-expand-lg navbar-light mb-4">
+        <div class="container">
+          <a class="navbar-brand fw-bold" href="#">
+            <i class="bi bi-bar-chart-fill text-primary me-2"></i>BIT-SCORE
+          </a>
+          <div class="d-flex align-items-center">
+            <span class="me-3 text-muted d-none d-md-block">
+              ${ student.name } (${ student.student_code })
+              <span class="ms-2 small">更新于: ${ refreshTime }</span>
+            </span>
+            <a href="/logout" class="btn btn-outline-danger btn-sm">退出</a>
+          </div>
+        </div>
+      </nav>
+
+      <div class="container">
+        <!-- 筛选栏 -->
+        <div class="row mb-4">
+          <div class="col-md-4">
+            <select
+              class="form-select border-0 shadow-sm"
+              v-model="selectedSemester"
+            >
+              <option value="all">全部学期</option>
+              <option v-for="sem in semesters" :value="sem">${ sem }</option>
+            </select>
+          </div>
+          <div
+            class="col-md-8 text-md-end text-muted align-self-center mt-2 mt-md-0"
+          >
+            <small v-if="selectedSemester === 'all'">
+              总学分: ${ student.total_credit } | 已修: ${
+              student.completed_credit }
+            </small>
+            <small v-else> 当前筛选范围内的统计数据 </small>
+          </div>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="row g-3 mb-4">
+          <!-- 第一行：科目与学分 -->
+          <div class="col-6 col-md-3">
+            <div class="card h-100 p-3">
+              <div class="stat-label">已修 / 总学分</div>
+              <div class="stat-value text-primary">
+                ${ student.completed_credit }
+                <span class="text-muted fs-6">/ ${ student.total_credit }</span>
+              </div>
+              <div class="stat-sub">上次刷新: ${ refreshTime }</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="card h-100 p-3">
+              <div class="stat-label">筛选范围学分</div>
+              <div class="stat-value text-success">
+                ${ currentStats.real_total_credit }
+              </div>
+              <div class="stat-sub">本次筛选统计</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="card h-100 p-3">
+              <div class="stat-label">均分 / 估计</div>
+              <div class="stat-value text-info">${ currentStats.average }</div>
+              <div class="stat-sub">估计: ${ currentStats.est_average }</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="card h-100 p-3">
+              <div class="stat-label">GPA / 估计</div>
+              <div class="stat-value text-warning">${ currentStats.gpa }</div>
+              <div class="stat-sub">估计: ${ currentStats.est_gpa }</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 成绩列表 -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold m-0">
+            <i class="bi bi-card-list me-2"></i>成绩详情
+          </h5>
+          <input
+            type="text"
+            class="form-control form-control-sm w-auto"
+            placeholder="搜索课程..."
+            v-model="searchQuery"
+          />
+        </div>
+
+        <div class="row g-3">
+          <div
+            class="col-12 col-md-6 col-lg-4"
+            v-for="course in filteredScores"
+            :key="course.course + course.kksj"
+          >
+            <div
+              class="card h-100 shadow-sm score-card"
+              :style="getCardStyle(course.score)"
+            >
+              <div class="card-body">
+                <div
+                  class="d-flex justify-content-between align-items-start mb-2"
+                >
+                  <h6
+                    class="card-title fw-bold mb-0 text-truncate"
+                    :title="course.course"
+                    style="max-width: 75%"
+                  >
+                    ${ course.course }
+                  </h6>
+                  <span class="badge bg-light text-dark border"
+                    >${ course.kksj }</span
+                  >
+                </div>
+
+                <div class="d-flex align-items-baseline mb-3">
+                  <div
+                    class="display-4 fw-bold me-2 score-val"
+                    style="color: var(--card-color, #2c3e50)"
+                  >
+                    ${ course.score }
+                  </div>
+                  <div
+                    class="text-muted small"
+                    v-if="calculateGP(course.score) !== '-'"
+                  >
+                    GPA: ${ calculateGP(course.score) }
+                  </div>
+                </div>
+
+                <div class="row g-2 small text-secondary">
+                  <div class="col-6">
+                    <i class="bi bi-tag me-1"></i> ${ course.type }
+                  </div>
+                  <div class="col-6 text-end">
+                    <i class="bi bi-credit-card me-1"></i> ${ course.credit }
+                    学分
+                  </div>
+
+                  <div
+                    class="col-12 border-top pt-2 mt-2 bg-light rounded p-2"
+                    v-if="hasRanking(course)"
+                  >
+                    <div
+                      class="d-flex justify-content-between text-center"
+                      style="font-size: 0.8rem"
+                    >
+                      <div v-if="course.class_proportion">
+                        <div class="fw-bold text-dark">
+                          ${ course.class_proportion }
+                        </div>
+                        <div class="text-muted scale-text">班级</div>
+                      </div>
+                      <div v-if="course.major_proportion">
+                        <div class="fw-bold text-dark">
+                          ${ course.major_proportion }
+                        </div>
+                        <div class="text-muted scale-text">专业</div>
+                      </div>
+                      <div v-if="course.school_proportion">
+                        <div class="fw-bold text-dark">
+                          ${ course.school_proportion }
+                        </div>
+                        <div class="text-muted scale-text">年级</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    class="col-12 mt-1 d-flex justify-content-between"
+                    style="font-size: 0.75rem"
+                  >
+                    <span v-if="course.average">均分: ${course.average}</span>
+                    <span v-if="course.max">最高: ${course.max}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12" v-if="filteredScores.length === 0">
+            <div class="text-center py-5 text-muted">
+              <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+              暂无相关数据
+            </div>
+          </div>
+        </div>
+
+        <footer class="text-center text-muted mt-5 mb-3 small">
+          BIT-SCORE &copy; 2026 | Developed by Haotian
+          <br />
+          GPA计算仅包含：公共基础课程、体育课、专业课、基础教育
+        </footer>
+      </div>
+    </div>
+
+    <script src="https://cdn.staticfile.org/vue/3.2.36/vue.global.min.js"></script>
+    <script>
+      const { createApp } = Vue
+
+      createApp({
+          delimiters: ['${', '}'],
+          data() {
+              return {
+                  scores: {{ scores | tojson }},
+                  student: {{ student | tojson }} || {},
+                  semesters: {{ semesters | tojson }},
+                  globalStats: {{ stats | tojson }},
+                  refreshTime: "{{ refresh_time }}",
+                  fetchedStats: null,
+                  selectedSemester: 'all',
+                  searchQuery: ''
+              }
+          },
+          computed: {
+              currentStats() {
+                  return this.fetchedStats || this.globalStats;
+              },
+              filteredScores() {
+                  let res = this.scores;
+                  if (this.selectedSemester !== 'all') {
+                      res = res.filter(s => s.kksj === this.selectedSemester)
+                  }
+                  if (this.searchQuery) {
+                      const q = this.searchQuery.toLowerCase();
+                      res = res.filter(s =>
+                          (s.course && s.course.toLowerCase().includes(q)) ||
+                          (s.type && s.type.toLowerCase().includes(q))
+                      )
+                  }
+                  return res;
+              }
+          },
+          watch: {
+              selectedSemester(newVal) {
+                  this.fetchStats(newVal);
+              }
+          },
+          methods: {
+              async fetchStats(sem) {
+                  try {
+                      const res = await fetch(`/api/stats?semester=${sem}`);
+                      const data = await res.json();
+                      this.fetchedStats = data;
+                  } catch (e) {
+                      console.error(e);
+                  }
+              },
+              getScoreClass(score) {
+                  if (!score) return '';
+                  if (score === '优秀') return 'score-excellent';
+                  if (score === '良好') return 'score-good';
+                  if (score === '不及格') return 'score-fail';
+
+                  const num = parseFloat(score);
+                  if (isNaN(num)) return '';
+                  if (num >= 90) return 'score-excellent';
+                  if (num >= 80) return 'score-good';
+                  if (num < 60) return 'score-fail';
+                  return '';
+              },
+              calculateGP(scoreStr) {
+                  // 简单的前端绩点计算展示，仅供参考，实际统计以后端为准
+                  if (!scoreStr) return '-';
+                  const levelMap = {'优秀':4.0, '良好':3.6, '中等':2.8, '及格':1.7, '不及格':0.0};
+                  if (levelMap[scoreStr] !== undefined) return levelMap[scoreStr];
+
+                  const s = parseFloat(scoreStr);
+                  if (isNaN(s)) return '-';
+                  if (s > 100) return '-'; // 超过100分（如四六级）不计算绩点
+                  if (s < 60) return '0.0';
+                  const gp = 4 - 3 * Math.pow(100 - s, 2) / 1600;
+                  return gp.toFixed(1);
+              },
+              getCardStyle(scoreStr) {
+                  let hue = 0; // Default Red
+                  let sat = '80%';
+                  let light = '45%';
+
+                  // 处理文本成绩
+                  const levelMap = {'优秀': 95, '良好': 85, '中等': 75, '及格': 65, '不及格': 0};
+                  let score = parseFloat(scoreStr);
+                  if (levelMap[scoreStr] !== undefined) score = levelMap[scoreStr];
+
+                  if (!isNaN(score)) {
+                      if (score < 60) {
+                          hue = 0; // Red
+                          light = '60%';
+                      } else {
+                          // 60 -> Hue 30 (Orange)
+                          // 100 -> Hue 140 (Check Green)
+                          // Mapping: Hue = 30 + (score - 60) * 2.75
+                          hue = 30 + (score - 60) * 2.75;
+                      }
+                  } else {
+                      return {'border-left': '5px solid #ccc'};
+                  }
+
+                  return {
+                      '--card-color': `hsl(${hue}, ${sat}, ${light})`,
+                      'border-left': `5px solid hsl(${hue}, ${sat}, ${light})`
+                  };
+              },
+              hasRanking(c) {
+                  return c.class_proportion || c.major_proportion || c.school_proportion;
+              },
+          },
+          mounted() {
+              this.startPolling();
+          },
+          beforeUnmount() {
+              if (this.pollingInterval) {
+                  clearInterval(this.pollingInterval);
+                  this.pollingInterval = null;
+              }
+          },
+          methods: {
+              startPolling() {
+                  this.pollingInterval = setInterval(async () => {
+                      try {
+                          const res = await fetch('/api/dashboard_data');
+                          if (res.ok) {
+                              const data = await res.json();
+                              this.student = data.student;
+                              this.scores = data.scores;
+                              this.globalStats = data.globalStats;
+                              this.refreshTime = data.refreshTime;
+                              this.semesters = data.semesters;
+
+                              // 如果当前选中了特定学期，也需要刷新其统计数据
+                              if (this.selectedSemester !== 'all') {
+                                  this.fetchStats(this.selectedSemester);
+                              }
+                          }
+                      } catch (e) {
+                          console.error("Polling error:", e);
+                      }
+                  }, 1000);
+              },
+              async fetchStats(sem) {
+                  try {
+                      const res = await fetch(`/api/stats?semester=${sem}`);
+                      const data = await res.json();
+                      this.fetchedStats = data;
+                  } catch (e) {
+                      console.error(e);
+                  }
+              },
+              getScoreClass(score) {
+                  if (!score) return '';
+                  if (score === '优秀') return 'score-excellent';
+                  if (score === '良好') return 'score-good';
+                  if (score === '不及格') return 'score-fail';
+
+                  const num = parseFloat(score);
+                  if (isNaN(num)) return '';
+                  if (num >= 90) return 'score-excellent';
+                  if (num >= 80) return 'score-good';
+                  if (num < 60) return 'score-fail';
+                  return '';
+              },
+              calculateGP(scoreStr) {
+                  // 简单的前端绩点计算展示，仅供参考，实际统计以后端为准
+                  if (!scoreStr) return '-';
+                  const levelMap = {'优秀':4.0, '良好':3.6, '中等':2.8, '及格':1.7, '不及格':0.0};
+                  if (levelMap[scoreStr] !== undefined) return levelMap[scoreStr];
+
+                  const s = parseFloat(scoreStr);
+                  if (isNaN(s)) return '-';
+                  if (s > 100) return '-'; // 超过100分（如四六级）不计算绩点
+                  if (s < 60) return '0.0';
+                  const gp = 4 - 3 * Math.pow(100 - s, 2) / 1600;
+                  return gp.toFixed(1);
+              },
+              getCardStyle(scoreStr) {
+                  let hue = 0; // Default Red
+                  let sat = '80%';
+                  let light = '45%';
+
+                  // 处理文本成绩
+                  const levelMap = {'优秀': 95, '良好': 85, '中等': 75, '及格': 65, '不及格': 0};
+                  let score = parseFloat(scoreStr);
+                  if (levelMap[scoreStr] !== undefined) score = levelMap[scoreStr];
+
+                  if (!isNaN(score)) {
+                      if (score < 60) {
+                          hue = 0; // Red
+                          light = '60%';
+                      } else {
+                          // 60 -> Hue 30 (Orange)
+                          // 100 -> Hue 140 (Check Green)
+                          // Mapping: Hue = 30 + (score - 60) * 2.75
+                          hue = 30 + (score - 60) * 2.75;
+                      }
+                  } else {
+                      return {'border-left': '5px solid #ccc'};
+                  }
+
+                  return {
+                      '--card-color': `hsl(${hue}, ${sat}, ${light})`,
+                      'border-left': `5px solid hsl(${hue}, ${sat}, ${light})`
+                  };
+              },
+              hasRanking(c) {
+                  return c.class_proportion || c.major_proportion || c.school_proportion;
+              },
+          }
+      }).mount('#app')
+    </script>
+  </body>
+</html>

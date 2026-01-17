@@ -6,6 +6,12 @@ from email.header import Header
 from email.utils import formataddr
 import settings
 import datetime
+import json
+import os
+import time
+
+HISTORY_FILE = "data/history.json"
+DATA_FILE = "data/data.json"
 
 def send_emails(subject,message,targets):
     if not targets: return False
@@ -189,13 +195,7 @@ def send_emails_update_basic(score,student,course,credit,average,max,class_propo
     .title {
       font-size: 1.4em;
       font-weight: bold;
-      color: #d35400;
-      margin-bottom: 18px;
-      text-align: center;
-    }
-    .info-list {
-      list-style: none;
-      padding: 0;
+      color: #d35400
       margin: 0 0 12px 0;
     }
     .info-list li {
@@ -361,6 +361,30 @@ def get_current_kksj():
         semester = f"{year - 1}-{year}-2"
     return semester
 
+def get_all_kksj(user):
+    if type(user) == dict:
+        if 'xznj' in user:
+          year = int(user['xznj']) # 入学年份
+        elif 'detail' in user and 'xznj' in user['detail']:
+          year = int(user['detail']['xznj'])
+    else:
+        year = int(user[0:4])
+    now = datetime.datetime.now()
+    semesters = []
+    current_year = now.year
+    current_month = now.month
+    for y in range(year, current_year + 1):
+        if y == current_year:
+            if current_month >= 10:
+                semesters.append(f"{y}-{y + 1}-1")
+            if current_month >= 4:
+                semesters.append(f"{y - 1}-{y}-2")
+        else:
+            semesters.append(f"{y}-{y + 1}-1")
+            if y + 1 < current_year:
+                semesters.append(f"{y}-{y + 1}-2")
+    return semesters
+
 def send_credit(student_name, completed_credit, total_credit):
     message="""<!DOCTYPE html>
 <html lang="zh-cn">
@@ -438,8 +462,4 @@ def send_credit(student_name, completed_credit, total_credit):
     message=message.replace("{{ total_credit }}", str(total_credit))
     message=message.replace("{{ update_time }}",datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     send_emails(f"学分变动通知",message,settings.mail_targets)
-
-
-
-
 

@@ -2,7 +2,7 @@
 # 网站的URL
 URL = 'https://jwms.bit.edu.cn/'
 # token刷新间隔
-refresh_interval = 3 # 每隔3秒刷新一次
+refresh_interval = 1 # 每隔1秒刷新一次
 
 # 设置
 # 学号
@@ -43,6 +43,18 @@ if os.getenv("MAIL_PORT"):
     mail_port = int(os.getenv("MAIL_PORT"))
 if os.getenv("MAIL_SSL"):
     mail_ssl = os.getenv("MAIL_SSL").lower() == "true"
+
+# Web 服务设置
+WEB_HOST = '0.0.0.0'
+WEB_PORT = 5001
+WEB_PASSWORD = 'admin' # 默认密码，建议修改
+
+if os.getenv("WEB_HOST"):
+    WEB_HOST = os.getenv("WEB_HOST")
+if os.getenv("WEB_PORT"):
+    WEB_PORT = int(os.getenv("WEB_PORT"))
+if os.getenv("WEB_PASSWORD"):
+    WEB_PASSWORD = os.getenv("WEB_PASSWORD")
 
 if not os.path.exists("data/"):
     os.makedirs("data/")

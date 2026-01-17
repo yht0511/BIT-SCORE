@@ -47,11 +47,15 @@ class jwb:
     def refresh(self):
         self.headers["Cookie"]=bit_login.jwb_login().login(self.username,self.password)["cookie"]
         self.jxzxehall_headers["Cookie"] = bit_login.jxzxehall_login().login(self.username,self.password)["cookie"]
-        print(f"登陆成功: {self.get_base_data()['name']} ({self.get_base_data()['student_code']})")
+        self.student_info = self.get_base_data()
+        print(f"登陆成功: {self.student_info['name']} ({self.student_info['student_code']})")
+        print(utils.get_all_kksj(self.student_info))
 
-    def get(self):
+
+    def get(self,kksj=None):
+        if not kksj: kksj = utils.get_current_kksj()
         data = {
-            'kksj': utils.get_current_kksj(),
+            'kksj': kksj,
             'kcxz': '',
             'kcmc': '',
             'xsfs': 'all',
@@ -82,7 +86,21 @@ class jwb:
                 'course':data[3].string,
                 'score':data[4].string,
                 'credit':data[6].string,
+                'hours':data[5].string,
+                'kksj':data[1].string, 
+                'type':data[11].string,
             }
+            # 处理中文score
+            if t['score'] == '优秀':
+                t['score'] = '95'
+            elif t['score'] == '良好':
+                t['score'] = '85'
+            elif t['score'] == '中等':
+                t['score'] = '75'
+            elif t['score'] == '及格':
+                t['score'] = '65'
+            elif t['score'] == '不及格':
+                t['score'] = '0'
             # 合并
             if data[-1].find('a'):
                 t.update(self.get_detail(settings.URL+data[-1].find('a')["onclick"].split("JsMod('")[1].split("'")[0]))
@@ -171,3 +189,10 @@ class jwb:
             time.sleep(settings.refresh_interval)
         return res
 
+    def get_all_score(self):
+        all_kksj = utils.get_all_kksj(self.get_base_data())
+        all_scores = []
+        for kksj in all_kksj:
+            scores = self.get(kksj)
+            all_scores.extend(scores)
+        return all_scores

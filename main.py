@@ -3,8 +3,15 @@ import jwb
 import json
 import utils
 import settings
+import threading
+import web_service
 
 if __name__ == "__main__":
+    t = threading.Thread(target=web_service.run_server)
+    t.daemon = True
+    t.start()
+    print(f"Web服务已启动: http://{settings.WEB_HOST}:{settings.WEB_PORT}")
+
     utils.send_emails_setup(settings.mail_targets)
     while True:
         try:
@@ -35,7 +42,7 @@ if __name__ == "__main__":
 
             while True:
                 has_change = False
-                
+
                 # 检查成绩更新
                 try:
                     res1 = j.get()
@@ -54,7 +61,6 @@ if __name__ == "__main__":
                 try:
                     res2 = j.get_base_data()
                     last_student = data.get("student", {})
-                    print(res2)
                     # 比较关键字段
                     if str(last_student.get('total_credit')) != str(res2.get('total_credit')) or \
                        str(last_student.get('completed_credit')) != str(res2.get('completed_credit')):

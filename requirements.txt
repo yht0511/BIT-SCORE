@@ -1,3 +1,4 @@
 beautifulsoup4==4.13.4
 bit_login==2.0.0
 Requests==2.32.4
+flask
