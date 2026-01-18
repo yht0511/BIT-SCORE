@@ -6,8 +6,8 @@ import secrets
 import threading
 
 app = Flask(__name__)
-# 使用一个固定的 secret key 或者每次启动随机生成
-# 为了保持 session 有效性，最好固定，但在简单应用中随机也可以
+
+
 app.secret_key = secrets.token_hex(16)
 
 def login_required(f):
@@ -17,6 +17,14 @@ def login_required(f):
         return f(*args, **kwargs)
     wrapper.__name__ = f.__name__
     return wrapper
+
+
+@app.route('/js/<path:filename>')
+def serve_js(filename):
+    return app.send_static_file(os.path.join('js', filename))
+@app.route('/css/<path:filename>')
+def serve_css(filename):
+    return app.send_static_file(os.path.join('css', filename))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -39,16 +47,16 @@ def logout():
 @login_required
 def index():
     student_info, scores = web_utils.merge_data()
-    # 全局统计
+    
     global_stats = web_utils.get_stats(scores)
     
-    # 获取上次刷新时间
+    
     last_refresh_time = web_utils.get_last_refresh_time()
     
-    # 提取学期列表
+    
     semesters = sorted(list(set([s['kksj'] for s in scores if s.get('kksj')])), reverse=True)
     
-    # 按照学期倒序排序成绩
+    
     scores.sort(key=lambda x: x.get('kksj', ''), reverse=True)
     
     return render_template('index.html', 
@@ -77,16 +85,16 @@ def api_stats():
 @login_required
 def api_dashboard_data():
     student_info, scores = web_utils.merge_data()
-    # 全局统计
+    
     global_stats = web_utils.get_stats(scores)
     
-    # 获取上次刷新时间
+    
     refresh_time = web_utils.get_last_refresh_time()
     
-    # 提取学期列表
+    
     semesters = sorted(list(set([s['kksj'] for s in scores if s.get('kksj')])), reverse=True)
     
-    # 按照学期倒序排序成绩
+    
     scores.sort(key=lambda x: x.get('kksj', ''), reverse=True)
     
     return jsonify({
@@ -98,8 +106,6 @@ def api_dashboard_data():
     })
 
 def run_server():
-    # 启动前检查历史数据
-    # 为了不阻塞 Web 启动，可以开线程去检查，或者阻塞一下也无所谓
     web_utils.fetch_history_if_needed()
     app.run(host=settings.WEB_HOST, port=settings.WEB_PORT, debug=False, use_reloader=False)
 
