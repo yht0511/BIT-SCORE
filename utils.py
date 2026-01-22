@@ -252,7 +252,7 @@ def send_emails_update_basic(score,student,course,credit,average,max,class_propo
     message=message.replace("{{ major_proportion }}",major_proportion if major_proportion else "无")
     message=message.replace("{{ school_proportion }}",school_proportion if school_proportion else "无")
     message=message.replace("{{ update_time }}",datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    send_emails(f"成绩更新:{course}",message,settings.mail_targets)
+    send_emails(f"[BIT-SCORE] 成绩更新:{course}",message,settings.mail_targets)
 
 def send_emails_anonymous(course,credit,average,max):
     message="""<!DOCTYPE html>
@@ -332,7 +332,7 @@ def send_emails_anonymous(course,credit,average,max):
     message=message.replace("{{ average }}",average if average else "无")
     message=message.replace("{{ max }}",max if max else "无")
     message=message.replace("{{ update_time }}",datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    send_emails(f"成绩更新:{course}",message,settings.mail_anonymous)
+    send_emails(f"[BIT-SCORE] 成绩更新:{course}",message,settings.mail_anonymous)
     
 def send_score(score,student,course,credit,average,max,class_proportion,major_proportion,school_proportion):
     send_emails_update_basic(score,student,course,credit,average,max,class_proportion,major_proportion,school_proportion)
@@ -390,7 +390,7 @@ def send_credit(student_name, completed_credit, total_credit, offset_credit=0):
 <html lang="zh-cn">
 <head>
   <meta charset="UTF-8">
-  <title>学分变动通知</title>
+  <title>学分更新通知</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -443,7 +443,7 @@ def send_credit(student_name, completed_credit, total_credit, offset_credit=0):
 </head>
 <body>
   <div class="container">
-    <div class="title">学分变动通知</div>
+    <div class="title">学分更新通知</div>
     <ul class="info-list">
       <li><span class="label">姓名：</span>{{ student }}</li>
       <li><span class="label">已修学分：</span>{{ completed_credit }}</li>
@@ -463,6 +463,6 @@ def send_credit(student_name, completed_credit, total_credit, offset_credit=0):
     message=message.replace("{{ total_credit }}", str(total_credit))
     message=message.replace("{{ offset_credit }}", str(offset_credit))
     message=message.replace("{{ update_time }}",datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    print("发送学分变动邮件...")
-    send_emails(f"学分变动通知",message,settings.mail_targets)
+    print("发送学分更新邮件...")
+    send_emails(f"[BIT-SCORE] 学分更新通知",message,settings.mail_targets)
 
