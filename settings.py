@@ -1,6 +1,6 @@
 # 网站设置
 # 网站的URL
-URL = 'https://jwms.bit.edu.cn/'
+URL = 'https://jwms.bit.edu.cn'
 # token刷新间隔
 refresh_interval = 1 # 每隔1秒刷新一次
 

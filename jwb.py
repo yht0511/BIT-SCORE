@@ -49,7 +49,6 @@ class jwb:
         self.jxzxehall_headers["Cookie"] = bit_login.jxzxehall_login().login(self.username,self.password)["cookie"]
         self.student_info = self.get_base_data()
         print(f"登陆成功: {self.student_info['name']} ({self.student_info['student_code']})")
-        print(utils.get_all_kksj(self.student_info))
 
 
     def get(self,kksj=None):
@@ -64,7 +63,8 @@ class jwb:
         if not self.check(response.text):
             self.refresh()
             return self.get()
-        return self.parse(response.text)
+        res = self.parse(response.text)
+        return res
     
     def get_detail(self,url):
         response = requests.get(url, headers=self.headers)

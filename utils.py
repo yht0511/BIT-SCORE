@@ -385,7 +385,7 @@ def get_all_kksj(user):
                 semesters.append(f"{y}-{y + 1}-2")
     return semesters
 
-def send_credit(student_name, completed_credit, total_credit, offset_credit=0):
+def send_credit(student_name, completed_credit, total_credit, offset_credit=0.0):
     message="""<!DOCTYPE html>
 <html lang="zh-cn">
 <head>
@@ -461,7 +461,7 @@ def send_credit(student_name, completed_credit, total_credit, offset_credit=0):
     message=message.replace("{{ student }}", str(student_name))
     message=message.replace("{{ completed_credit }}", str(completed_credit))
     message=message.replace("{{ total_credit }}", str(total_credit))
-    message=message.replace("{{ offset_credit }}", str(offset_credit))
+    message=message.replace("{{ offset_credit }}", str(round(offset_credit, 2)))
     message=message.replace("{{ update_time }}",datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     print("发送学分更新邮件...")
     send_emails(f"[BIT-SCORE] 学分更新通知",message,settings.mail_targets)
