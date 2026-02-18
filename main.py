@@ -42,6 +42,7 @@ if __name__ == "__main__":
 
             while True:
                 has_change = False
+                all_right = True
 
                 # 检查成绩更新
                 try:
@@ -54,6 +55,7 @@ if __name__ == "__main__":
                         data["score"] = res1
                         has_change = True
                 except Exception as e:
+                    all_right = False
                     print(f"检查成绩更新时出错: {e}")
                     j.refresh()
 
@@ -70,6 +72,7 @@ if __name__ == "__main__":
                         data["student"] = res2
                         has_change = True
                 except Exception as e:
+                    all_right = False
                     print(f"检查学分更新时出错: {e}")
 
                 # 如果有更新，保存数据
@@ -78,7 +81,8 @@ if __name__ == "__main__":
                         json.dump(data,f,ensure_ascii=False,indent=4)
                 
                 # 记录日志
-                open("data/log.txt",mode="w",encoding="utf-8").write(f"最后检查时间:{time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())}\n")
+                if all_right:
+                    open("data/log.txt",mode="w",encoding="utf-8").write(f"最后检查时间:{time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())}\n")
                 
                 time.sleep(settings.refresh_interval)
 
