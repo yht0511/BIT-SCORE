@@ -71,7 +71,7 @@ def is_calculated_course(course_type):
     if not course_type:
         return False
     
-    valid_types = ['公共基础课程', '体育课', '专业课', '基础教育', '专业基础课程', '通识教育课程']
+    valid_types = ['公共基础课程', '体育课', '专业课', '基础教育', '专业基础课程', '通识教育课程', '实践环节']
     return course_type in valid_types
 
 def get_stats(scores):
