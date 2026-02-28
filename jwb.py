@@ -45,128 +45,33 @@ class jwb:
         self.refresh()
         
     def refresh(self):
-        self.headers["Cookie"]=bit_login.jwb_login().login(self.username,self.password)["cookie"]
-        self.jxzxehall_headers["Cookie"] = bit_login.jxzxehall_login().login(self.username,self.password)["cookie"]
+        print("登陆教务部...")
+        self.jwb_login = bit_login.jwb_login().login(self.username,self.password)
+        self.jwb = bit_login.jwb.jwb(self.jwb_login.get_session())
+        self.headers["Cookie"]=self.jwb_login.get_result()["cookie"]
+        print("✅ 成功")
+        print("登陆教学中心...")
+        self.jxzxehall_login = bit_login.jxzxehall_login().login(self.username,self.password)
+        self.jxzxehall = bit_login.jxzxehall.jxzxehall(self.jxzxehall_login.get_session())
+        self.jxzxehall_headers["Cookie"] = self.jxzxehall_login.get_result()["cookie"]
+        print("✅ 成功")
         self.student_info = self.get_base_data()
         print(f"登陆成功: {self.student_info['name']} ({self.student_info['student_code']})")
 
 
-    def get(self,kksj=None):
-        if not kksj: kksj = utils.get_current_kksj()
-        data = {
-            'kksj': kksj,
-            'kcxz': '',
-            'kcmc': '',
-            'xsfs': 'all',
-        }
-        response = requests.post(f'{settings.URL}/jsxsd/kscj/cjcx_list', headers=self.headers, data=data)
-        if not self.check(response.text):
-            self.refresh()
-            return self.get()
-        res = self.parse(response.text)
-        return res
-    
-    def get_detail(self,url):
-        response = requests.get(url, headers=self.headers)
-        if not self.check(response.text):
-            self.refresh()
-            return self.get_detail(url)
-        return self.parse_detail(response.text)
-        
-    def parse(self,data):
-        parser = BeautifulSoup(data, 'html.parser')
-        dataList = parser.find(id='dataList')
-        dataList = dataList.find_all('tr')
-        student_name = parser.find(id='Top1_divLoginName').text
-        res=[]
-        for data in dataList[1:]:
-            data = data.find_all('td')
-            t={
-                'student':student_name,
-                'course':data[3].string,
-                'score':data[4].string,
-                'credit':data[6].string,
-                'hours':data[5].string,
-                'kksj':data[1].string, 
-                'type':data[11].string,
-            }
-            # 处理中文score
-            if t['score'] == '优秀':
-                t['score'] = '95'
-            elif t['score'] == '良好':
-                t['score'] = '85'
-            elif t['score'] == '中等':
-                t['score'] = '75'
-            elif t['score'] == '及格':
-                t['score'] = '65'
-            elif t['score'] == '不及格':
-                t['score'] = '0'
-            # 合并
-            if data[-1].find('a'):
-                t.update(self.get_detail(settings.URL+data[-1].find('a')["onclick"].split("JsMod('")[1].split("'")[0]))
-            else:
-                t.update({
-                    'average': None,
-                    'max': None,
-                    'class_proportion': None,
-                    'major_proportion': None,
-                    'school_proportion': None,
-                })
-            res.append(t)
-        return res
-    
-    def parse_detail(self,data):
-        parser = BeautifulSoup(data, 'html.parser')
-        dataLists = parser.find_all(id='dataList')
-        class_detail=dataLists[1].find_all('tr')[-1]
-        class_detail=class_detail.find_all("td")
-        self_detail=dataLists[2].find_all("td")
-        return {
-            'average':class_detail[0].string.split("：")[-1],
-            'max':class_detail[1].string.split("：")[-1],
-            'class_proportion':self_detail[1].string.split("：")[-1],
-            'major_proportion':self_detail[2].string.split("：")[-1],
-            'school_proportion':self_detail[3].string.split("：")[-1],
-        }
-    
-    def get_base_data(self):
-        response = requests.get(
-            'https://jxzxehallapp.bit.edu.cn/jwapp/sys/xsfacx/modules/pyfacxepg/grpyfacx.do',
-            headers=self.jxzxehall_headers,
-        )
+    def get(self,kksj=None,detailed=True):
         try:
-            res_json = response.json()
+            return self.jwb.get_score(kksj,detailed=detailed)
+        except:
+            self.refresh()
+            return self.get(kksj,detailed)
+            
+    def get_base_data(self):
+        try:
+            return self.jxzxehall.get_student_data()
         except:
             self.refresh()
             return self.get_base_data()
-        data = {
-            "name": res_json["datas"]["grpyfacx"]["rows"][0]["XM"],
-            "student_code": res_json["datas"]["grpyfacx"]["rows"][0]["XH"],
-            "major": res_json["datas"]["grpyfacx"]["rows"][0]["ZYDM_DISPLAY"],
-            "class": res_json["datas"]["grpyfacx"]["rows"][0]["BJDM_DISPLAY"],
-            "grade": res_json["datas"]["grpyfacx"]["rows"][0]["XZNJ_DISPLAY"],
-            "gender": res_json["datas"]["grpyfacx"]["rows"][0]["XBDM_DISPLAY"],
-            "college": res_json["datas"]["grpyfacx"]["rows"][0]["YXDM_DISPLAY"],
-            "total_credit": res_json["datas"]["grpyfacx"]["rows"][0]["ZSYQXF"],
-            "completed_credit": res_json["datas"]["grpyfacx"]["rows"][0]["YWCXF"],
-            "required_credit": res_json["datas"]["grpyfacx"]["rows"][0]["ZSYQXFXSZ"],
-            "id": res_json["datas"]["grpyfacx"]["rows"][0]["WID"],
-            "detail": {
-                "pyfadm": res_json["datas"]["grpyfacx"]["rows"][0]["PYFADM"],
-                "zydm": res_json["datas"]["grpyfacx"]["rows"][0]["ZYDM"],
-                "xdlxdm": res_json["datas"]["grpyfacx"]["rows"][0]["XDLXDM"],
-                "xdlxdm_display": res_json["datas"]["grpyfacx"]["rows"][0]["XDLXDM_DISPLAY"],
-                "xbdm": res_json["datas"]["grpyfacx"]["rows"][0]["XBDM"],
-                "xbdm_display": res_json["datas"]["grpyfacx"]["rows"][0]["XBDM_DISPLAY"],
-                "zydm_display": res_json["datas"]["grpyfacx"]["rows"][0]["ZYDM_DISPLAY"],
-                "yxdm": res_json["datas"]["grpyfacx"]["rows"][0]["YXDM"],
-                "yxdm_display": res_json["datas"]["grpyfacx"]["rows"][0]["YXDM_DISPLAY"],
-                "wxdm": res_json["datas"]["grpyfacx"]["rows"][0]["WID"],
-                "xznj": res_json["datas"]["grpyfacx"]["rows"][0]["XZNJ"],
-                "xznj_display": res_json["datas"]["grpyfacx"]["rows"][0]["XZNJ_DISPLAY"],
-            }
-        }
-        return data
     
     def check(self,data):
         if "通行密钥认证" in data:
@@ -190,9 +95,8 @@ class jwb:
         return res
 
     def get_all_score(self):
-        all_kksj = utils.get_all_kksj(self.get_base_data())
-        all_scores = []
-        for kksj in all_kksj:
-            scores = self.get(kksj)
-            all_scores.extend(scores)
-        return all_scores
+        try:
+            return self.jwb.get_all_score()
+        except: 
+            self.refresh()
+            return self.get_all_score()
