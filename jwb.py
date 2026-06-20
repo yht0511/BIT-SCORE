@@ -47,12 +47,12 @@ class jwb:
     def refresh(self):
         print("登陆教务部...")
         self.jwb_login = bit_login.jwb_login().login(self.username,self.password)
-        self.jwb = bit_login.jwb.jwb(self.jwb_login.get_session())
+        self.jwb = bit_login.jwb.score(self.jwb_login.get_session())
         self.headers["Cookie"]=self.jwb_login.get_result()["cookie"]
         print("✅ 成功")
         print("登陆教学中心...")
         self.jxzxehall_login = bit_login.jxzxehall_login().login(self.username,self.password)
-        self.jxzxehall = bit_login.jxzxehall.jxzxehall(self.jxzxehall_login.get_session())
+        self.jxzxehall = bit_login.jxzxehall.credit(self.jxzxehall_login.get_session())
         self.jxzxehall_headers["Cookie"] = self.jxzxehall_login.get_result()["cookie"]
         print("✅ 成功")
         self.student_info = self.get_base_data()
