@@ -1,9 +1,7 @@
 import time
-import requests
 import settings
 import utils
 import bit_login
-from bs4 import BeautifulSoup
 
 class jwb:
     def __init__(self,username=settings.student_code,password=settings.password):
@@ -62,14 +60,16 @@ class jwb:
     def get(self,kksj=None,detailed=True):
         try:
             return self.jwb.get_score(kksj,detailed=detailed)
-        except:
+        except Exception as e:
+            print(f"获取成绩失败: {e}")
             self.refresh()
             return self.get(kksj,detailed)
             
     def get_base_data(self):
         try:
             return self.jxzxehall.get_student_data()
-        except:
+        except Exception as e:
+            print(f"获取基本信息失败: {e}")
             self.refresh()
             return self.get_base_data()
     
@@ -97,6 +97,7 @@ class jwb:
     def get_all_score(self):
         try:
             return self.jwb.get_all_score()
-        except: 
+        except Exception as e:
+            print(f"获取所有成绩失败: {e}")
             self.refresh()
             return self.get_all_score()
