@@ -107,5 +107,5 @@ class jwb:
             time.sleep(settings.refresh_interval)
         return res
 
-    def get_all_score(self):
-        return self._retry_call(lambda: self.jwb.get_all_score(), "获取所有成绩")
+    def get_all_score(self, detailed=True):
+        return self._retry_call(lambda: self.jwb.get_all_score(detailed=detailed), "获取所有成绩")

@@ -209,13 +209,20 @@ def fetch_history_if_needed():
     检查是否有历史数据，如果没有则获取。
     """
     if os.path.exists(HISTORY_FILE) and os.path.getsize(HISTORY_FILE) > 5:
-        return
+        try:
+            with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
+                history_scores = json.load(f)
+            if not history_scores or 'average' in history_scores[0]:
+                return
+            print("Web模块: 历史成绩缓存缺少详细信息，正在重新初始化...")
+        except Exception:
+            pass
         
     print("Web模块: 正在初始化历史成绩缓存...")
     try:
         import jwb 
         j = jwb.jwb() 
-        all_scores = j.get_all_score()
+        all_scores = j.get_all_score(detailed=True)
 
         current_kksj = utils.get_current_kksj()
         
@@ -240,6 +247,5 @@ def get_last_refresh_time():
         except:
             return "未知"
     return "未知"
-
 
 
