@@ -3,6 +3,9 @@
 URL = 'https://jwms.bit.edu.cn'
 # token刷新间隔
 refresh_interval = 1 # 每隔1秒刷新一次
+# 网络请求超时和重试次数，避免教务系统请求卡住后主循环静默停止。
+request_timeout = 30
+request_max_retries = 3
 
 # 设置
 # 学号
@@ -39,6 +42,10 @@ if os.getenv("MAIL_TITLE"):
     mail_title = os.getenv("MAIL_TITLE")
 if os.getenv("REFRESH_INTERVAL"):
     refresh_interval = int(os.getenv("REFRESH_INTERVAL"))
+if os.getenv("REQUEST_TIMEOUT"):
+    request_timeout = int(os.getenv("REQUEST_TIMEOUT"))
+if os.getenv("REQUEST_MAX_RETRIES"):
+    request_max_retries = int(os.getenv("REQUEST_MAX_RETRIES"))
 if os.getenv("MAIL_PORT"):
     mail_port = int(os.getenv("MAIL_PORT"))
 if os.getenv("MAIL_SSL"):

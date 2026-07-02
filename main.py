@@ -40,7 +40,11 @@ if __name__ == "__main__":
                 except Exception as e:
                     print(f"初始化数据失败: {e}")
 
+            check_count = 0
             while True:
+                check_count += 1
+                check_time = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())
+                print(f"开始第 {check_count} 轮检查: {check_time}", flush=True)
                 has_change = False
                 all_right = True
 
@@ -83,6 +87,7 @@ if __name__ == "__main__":
                 # 记录日志
                 if all_right:
                     open("data/log.txt",mode="w",encoding="utf-8").write(f"最后检查时间:{time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())}\n")
+                    print(f"第 {check_count} 轮检查完成: 未发现更新，{settings.refresh_interval} 秒后继续", flush=True)
                 
                 time.sleep(settings.refresh_interval)
 

@@ -1,7 +1,18 @@
 import time
 import settings
 import utils
+import requests
 import bit_login
+
+_original_request = requests.sessions.Session.request
+
+
+def _request_with_default_timeout(self, method, url, **kwargs):
+    kwargs.setdefault("timeout", settings.request_timeout)
+    return _original_request(self, method, url, **kwargs)
+
+
+requests.sessions.Session.request = _request_with_default_timeout
 
 class jwb:
     def __init__(self,username=settings.student_code,password=settings.password):
@@ -41,8 +52,19 @@ class jwb:
         "sec-ch-ua-mobile": "?0"
         }
         self.refresh()
+
+    def _retry_call(self, action, label):
+        last_error = None
+        for attempt in range(1, settings.request_max_retries + 1):
+            try:
+                return action()
+            except Exception as e:
+                last_error = e
+                print(f"{label}失败({attempt}/{settings.request_max_retries}): {e}")
+                self.refresh(load_student=False)
+        raise RuntimeError(f"{label}连续失败: {last_error}")
         
-    def refresh(self):
+    def refresh(self, load_student=True):
         print("登陆教务部...")
         self.jwb_login = bit_login.jwb_login().login(self.username,self.password)
         self.jwb = bit_login.jwb.score(self.jwb_login.get_session())
@@ -53,25 +75,16 @@ class jwb:
         self.jxzxehall = bit_login.jxzxehall.credit(self.jxzxehall_login.get_session())
         self.jxzxehall_headers["Cookie"] = self.jxzxehall_login.get_result()["cookie"]
         print("✅ 成功")
-        self.student_info = self.get_base_data()
-        print(f"登陆成功: {self.student_info['name']} ({self.student_info['student_code']})")
+        if load_student:
+            self.student_info = self.jxzxehall.get_student_data()
+            print(f"登陆成功: {self.student_info['name']} ({self.student_info['student_code']})")
 
 
     def get(self,kksj=None,detailed=True):
-        try:
-            return self.jwb.get_score(kksj,detailed=detailed)
-        except Exception as e:
-            print(f"获取成绩失败: {e}")
-            self.refresh()
-            return self.get(kksj,detailed)
+        return self._retry_call(lambda: self.jwb.get_score(kksj,detailed=detailed), "获取成绩")
             
     def get_base_data(self):
-        try:
-            return self.jxzxehall.get_student_data()
-        except Exception as e:
-            print(f"获取基本信息失败: {e}")
-            self.refresh()
-            return self.get_base_data()
+        return self._retry_call(lambda: self.jxzxehall.get_student_data(), "获取基本信息")
     
     def check(self,data):
         if "通行密钥认证" in data:
@@ -95,9 +108,4 @@ class jwb:
         return res
 
     def get_all_score(self):
-        try:
-            return self.jwb.get_all_score()
-        except Exception as e:
-            print(f"获取所有成绩失败: {e}")
-            self.refresh()
-            return self.get_all_score()
+        return self._retry_call(lambda: self.jwb.get_all_score(), "获取所有成绩")
