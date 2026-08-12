@@ -110,13 +110,17 @@ def api_dashboard_data():
 @app.route('/api/sms/status')
 @login_required
 def api_sms_status():
-    return jsonify(sms_broker.snapshot())
+    response = jsonify(sms_broker.snapshot())
+    response.headers['Cache-Control'] = 'no-store'
+    return response
 
 
 @app.route('/api/sms/submit', methods=['POST'])
 @login_required
 def api_sms_submit():
     payload = request.get_json(silent=True) or {}
+    if not isinstance(payload, dict):
+        return jsonify({'ok': False, 'error': '请提交有效的验证码'}), 400
     try:
         sms_broker.submit(payload.get('challenge_id'), payload.get('code'))
     except SmsChallengeError as error:

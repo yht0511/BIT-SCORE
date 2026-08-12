@@ -116,7 +116,7 @@ class SmsVerificationBroker:
                 challenge.message = (
                     "验证成功，登录正在继续"
                     if success
-                    else "验证未通过，程序将自动重新发起登录"
+                    else "本次登录未完成，程序将自动重新发起登录"
                 )
                 challenge.completed_at = time.time()
         self._thread_state.challenge_id = None
