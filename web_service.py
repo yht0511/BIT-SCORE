@@ -4,6 +4,7 @@ import web_utils
 import os
 import secrets
 import threading
+from sms_verification import SmsChallengeError, sms_broker
 
 app = Flask(__name__)
 
@@ -105,8 +106,31 @@ def api_dashboard_data():
         'semesters': semesters
     })
 
+
+@app.route('/api/sms/status')
+@login_required
+def api_sms_status():
+    return jsonify(sms_broker.snapshot())
+
+
+@app.route('/api/sms/submit', methods=['POST'])
+@login_required
+def api_sms_submit():
+    payload = request.get_json(silent=True) or {}
+    try:
+        sms_broker.submit(payload.get('challenge_id'), payload.get('code'))
+    except SmsChallengeError as error:
+        return jsonify({'ok': False, 'error': str(error)}), 400
+    return jsonify({'ok': True, 'message': '验证码已提交，正在验证'})
+
 def run_server():
-    web_utils.fetch_history_if_needed()
+    # Start Flask immediately. History initialization may itself pause for an
+    # SMS code, and the user must be able to open the Web UI to provide it.
+    threading.Thread(
+        target=web_utils.fetch_history_if_needed,
+        name="history-initializer",
+        daemon=True,
+    ).start()
     app.run(host=settings.WEB_HOST, port=settings.WEB_PORT, debug=False, use_reloader=False)
 
 if __name__ == '__main__':

@@ -3,6 +3,11 @@ import settings
 import utils
 import requests
 import bit_login
+import sms_verification
+import threading
+
+
+_login_lock = threading.RLock()
 
 _original_request = requests.sessions.Session.request
 
@@ -65,19 +70,33 @@ class jwb:
         raise RuntimeError(f"{label}连续失败: {last_error}")
         
     def refresh(self, load_student=True):
-        print("登陆教务部...")
-        self.jwb_login = bit_login.jwb_login().login(self.username,self.password)
-        self.jwb = bit_login.jwb.score(self.jwb_login.get_session())
-        self.headers["Cookie"]=self.jwb_login.get_result()["cookie"]
-        print("✅ 成功")
-        print("登陆教学中心...")
-        self.jxzxehall_login = bit_login.jxzxehall_login().login(self.username,self.password)
-        self.jxzxehall = bit_login.jxzxehall.credit(self.jxzxehall_login.get_session())
-        self.jxzxehall_headers["Cookie"] = self.jxzxehall_login.get_result()["cookie"]
-        print("✅ 成功")
-        if load_student:
-            self.student_info = self.jxzxehall.get_student_data()
-            print(f"登陆成功: {self.student_info['name']} ({self.student_info['student_code']})")
+        # History initialization and the monitor can both request a login. Keep
+        # them serialized so two indistinguishable SMS codes are not sent at once.
+        with _login_lock:
+            print("登陆教务部...")
+            self.jwb_login = self._login_with_web_sms(bit_login.jwb_login)
+            self.jwb = bit_login.jwb.score(self.jwb_login.get_session())
+            self.headers["Cookie"]=self.jwb_login.get_result()["cookie"]
+            print("✅ 成功")
+            print("登陆教学中心...")
+            self.jxzxehall_login = self._login_with_web_sms(bit_login.jxzxehall_login)
+            self.jxzxehall = bit_login.jxzxehall.credit(self.jxzxehall_login.get_session())
+            self.jxzxehall_headers["Cookie"] = self.jxzxehall_login.get_result()["cookie"]
+            print("✅ 成功")
+            if load_student:
+                self.student_info = self.jxzxehall.get_student_data()
+                print(f"登陆成功: {self.student_info['name']} ({self.student_info['student_code']})")
+
+    def _login_with_web_sms(self, login_factory):
+        try:
+            result = login_factory(
+                sms_code_callback=sms_verification.sms_broker.request_code
+            ).login(self.username, self.password)
+        except Exception:
+            sms_verification.sms_broker.finish_current(False)
+            raise
+        sms_verification.sms_broker.finish_current(True)
+        return result
 
 
     def get(self,kksj=None,detailed=True):

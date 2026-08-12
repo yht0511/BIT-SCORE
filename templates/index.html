@@ -88,6 +88,101 @@
         transform: translateY(-5px);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1) !important;
       }
+
+      .sms-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1080;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.25rem;
+        background: rgba(22, 30, 50, 0.48);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+      .sms-dialog {
+        position: relative;
+        width: 100%;
+        max-width: 430px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.97);
+        box-shadow: 0 28px 80px rgba(20, 34, 66, 0.28);
+        animation: sms-dialog-in 0.28s ease-out;
+      }
+      .sms-dialog::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: linear-gradient(90deg, #246bfd, #7c4dff, #19b7a6);
+      }
+      .sms-dialog-body {
+        padding: 2rem;
+      }
+      .sms-icon {
+        display: grid;
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1.25rem;
+        place-items: center;
+        border-radius: 20px;
+        color: #fff;
+        font-size: 1.75rem;
+        background: linear-gradient(135deg, #246bfd, #7657ed);
+        box-shadow: 0 12px 28px rgba(75, 92, 235, 0.28);
+      }
+      .sms-code-input {
+        height: 60px;
+        border: 2px solid #e4e9f2;
+        border-radius: 15px;
+        color: #17223b;
+        font-size: 1.55rem;
+        font-weight: 700;
+        letter-spacing: 0.5em;
+        text-align: center;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .sms-code-input:focus {
+        border-color: #5b68ed;
+        box-shadow: 0 0 0 0.25rem rgba(91, 104, 237, 0.13);
+      }
+      .sms-submit-btn {
+        min-height: 50px;
+        border: 0;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #246bfd, #6f55ec);
+        box-shadow: 0 10px 24px rgba(72, 91, 230, 0.24);
+        font-weight: 600;
+      }
+      .sms-status-icon {
+        font-size: 3rem;
+        line-height: 1;
+      }
+      .sms-spinner {
+        width: 2.75rem;
+        height: 2.75rem;
+        color: #5b68ed;
+      }
+      @keyframes sms-dialog-in {
+        from {
+          opacity: 0;
+          transform: translateY(16px) scale(0.97);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+      @media (max-width: 575.98px) {
+        .sms-dialog-body {
+          padding: 1.6rem 1.25rem;
+        }
+      }
     </style>
   </head>
   <body>
@@ -286,6 +381,91 @@
           GPA计算仅包含：公共基础课程、体育课、专业课、基础教育
         </footer>
       </div>
+
+      <div
+        class="sms-overlay"
+        v-if="smsChallenge"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sms-title"
+      >
+        <div class="sms-dialog">
+          <div class="sms-dialog-body text-center">
+            <template v-if="smsChallenge.status === 'waiting_sms'">
+              <div class="sms-icon"><i class="bi bi-chat-dots-fill"></i></div>
+              <h4 class="fw-bold mb-2" id="sms-title">需要短信验证</h4>
+              <p class="text-muted mb-1">验证码已发送至</p>
+              <div class="fs-5 fw-semibold text-dark mb-4">
+                ${ smsChallenge.masked_phone }
+              </div>
+
+              <form @submit.prevent="submitSmsCode">
+                <label for="sms-code" class="visually-hidden">短信验证码</label>
+                <input
+                  id="sms-code"
+                  ref="smsCodeInput"
+                  v-model="smsCode"
+                  class="form-control sms-code-input mb-2"
+                  type="text"
+                  inputmode="numeric"
+                  autocomplete="one-time-code"
+                  maxlength="8"
+                  pattern="[0-9]{4,8}"
+                  placeholder="······"
+                  :disabled="smsSubmitting"
+                  @input="sanitizeSmsCode"
+                />
+                <div class="small text-muted mb-3">
+                  ${ formatSmsCountdown(smsChallenge.expires_in) } 后失效
+                </div>
+                <div class="alert alert-danger py-2 small" v-if="smsError">
+                  ${ smsError }
+                </div>
+                <button
+                  class="btn btn-primary sms-submit-btn w-100"
+                  type="submit"
+                  :disabled="smsSubmitting || smsCode.length < 4"
+                >
+                  <span
+                    v-if="smsSubmitting"
+                    class="spinner-border spinner-border-sm me-2"
+                    aria-hidden="true"
+                  ></span>
+                  ${ smsSubmitting ? '正在提交...' : '验证并继续登录' }
+                </button>
+              </form>
+              <p class="small text-muted mt-3 mb-0">
+                <i class="bi bi-shield-lock me-1"></i>
+                验证码仅用于本次登录，不会被保存
+              </p>
+            </template>
+
+            <template v-else-if="smsChallenge.status === 'verifying'">
+              <div class="spinner-border sms-spinner mb-4" role="status"></div>
+              <h4 class="fw-bold mb-2" id="sms-title">正在验证</h4>
+              <p class="text-muted mb-0">请稍候，系统正在继续登录教务平台…</p>
+            </template>
+
+            <template v-else-if="smsChallenge.status === 'succeeded'">
+              <div class="sms-status-icon text-success mb-3">
+                <i class="bi bi-check-circle-fill"></i>
+              </div>
+              <h4 class="fw-bold mb-2" id="sms-title">验证成功</h4>
+              <p class="text-muted mb-0">登录已继续，窗口即将自动关闭。</p>
+            </template>
+
+            <template v-else>
+              <div class="sms-status-icon text-danger mb-3">
+                <i class="bi bi-exclamation-circle-fill"></i>
+              </div>
+              <h4 class="fw-bold mb-2" id="sms-title">验证未完成</h4>
+              <p class="text-muted mb-0">
+                ${ smsChallenge.message || '程序将自动重新发起登录。' }
+              </p>
+            </template>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="./js/vue.global.min.js"></script>
@@ -303,7 +483,13 @@
                   refreshTime: "{{ refresh_time }}",
                   fetchedStats: null,
                   selectedSemester: 'all',
-                  searchQuery: ''
+                  searchQuery: '',
+                  pollingInterval: null,
+                  smsPollingInterval: null,
+                  smsChallenge: null,
+                  smsCode: '',
+                  smsError: '',
+                  smsSubmitting: false
               }
           },
           computed: {
@@ -330,82 +516,19 @@
                   this.fetchStats(newVal);
               }
           },
-          methods: {
-              async fetchStats(sem) {
-                  try {
-                      const res = await fetch(`/api/stats?semester=${sem}`);
-                      const data = await res.json();
-                      this.fetchedStats = data;
-                  } catch (e) {
-                      console.error(e);
-                  }
-              },
-              getScoreClass(score) {
-                  if (!score) return '';
-                  if (score === '优秀') return 'score-excellent';
-                  if (score === '良好') return 'score-good';
-                  if (score === '不及格') return 'score-fail';
-
-                  const num = parseFloat(score);
-                  if (isNaN(num)) return '';
-                  if (num >= 90) return 'score-excellent';
-                  if (num >= 80) return 'score-good';
-                  if (num < 60) return 'score-fail';
-                  return '';
-              },
-              calculateGP(scoreStr) {
-                  // 简单的前端绩点计算展示，仅供参考，实际统计以后端为准
-                  if (!scoreStr) return '-';
-                  const levelMap = {'优秀':4.0, '良好':3.6, '中等':2.8, '及格':1.7, '不及格':0.0};
-                  if (levelMap[scoreStr] !== undefined) return levelMap[scoreStr];
-
-                  const s = parseFloat(scoreStr);
-                  if (isNaN(s)) return '-';
-                  if (s > 100) return '-'; // 超过100分（如四六级）不计算绩点
-                  if (s < 60) return '0.0';
-                  const gp = 4 - 3 * Math.pow(100 - s, 2) / 1600;
-                  return gp.toFixed(1);
-              },
-              getCardStyle(scoreStr) {
-                  let hue = 0; // Default Red
-                  let sat = '80%';
-                  let light = '45%';
-
-                  // 处理文本成绩
-                  const levelMap = {'优秀': 95, '良好': 85, '中等': 75, '及格': 65, '不及格': 0};
-                  let score = parseFloat(scoreStr);
-                  if (levelMap[scoreStr] !== undefined) score = levelMap[scoreStr];
-
-                  if (!isNaN(score)) {
-                      if (score < 60) {
-                          hue = 0; // Red
-                          light = '60%';
-                      } else {
-                          // 60 -> Hue 30 (Orange)
-                          // 100 -> Hue 140 (Check Green)
-                          // Mapping: Hue = 30 + (score - 60) * 2.75
-                          hue = 30 + (score - 60) * 2.75;
-                      }
-                  } else {
-                      return {'border-left': '5px solid #ccc'};
-                  }
-
-                  return {
-                      '--card-color': `hsl(${hue}, ${sat}, ${light})`,
-                      'border-left': `5px solid hsl(${hue}, ${sat}, ${light})`
-                  };
-              },
-              hasRanking(c) {
-                  return c.class_proportion || c.major_proportion || c.school_proportion;
-              },
-          },
           mounted() {
               this.startPolling();
+              this.checkSmsStatus();
+              this.smsPollingInterval = setInterval(this.checkSmsStatus, 1000);
           },
           beforeUnmount() {
               if (this.pollingInterval) {
                   clearInterval(this.pollingInterval);
                   this.pollingInterval = null;
+              }
+              if (this.smsPollingInterval) {
+                  clearInterval(this.smsPollingInterval);
+                  this.smsPollingInterval = null;
               }
           },
           methods: {
@@ -439,6 +562,70 @@
                   } catch (e) {
                       console.error(e);
                   }
+              },
+              async checkSmsStatus() {
+                  try {
+                      const res = await fetch('/api/sms/status', {
+                          headers: {'Accept': 'application/json'}
+                      });
+                      if (!res.ok) return;
+                      const data = await res.json();
+                      if (data.status === 'idle') {
+                          this.smsChallenge = null;
+                          this.smsCode = '';
+                          this.smsError = '';
+                          this.smsSubmitting = false;
+                          return;
+                      }
+
+                      const isNewChallenge = !this.smsChallenge ||
+                          this.smsChallenge.challenge_id !== data.challenge_id;
+                      this.smsChallenge = data;
+                      if (data.status !== 'verifying') {
+                          this.smsSubmitting = false;
+                      }
+                      if (isNewChallenge && data.status === 'waiting_sms') {
+                          this.smsCode = '';
+                          this.smsError = '';
+                          this.$nextTick(() => this.$refs.smsCodeInput?.focus());
+                      }
+                  } catch (e) {
+                      console.error('SMS status polling error:', e);
+                  }
+              },
+              sanitizeSmsCode() {
+                  this.smsCode = this.smsCode.replace(/\D/g, '').slice(0, 8);
+                  this.smsError = '';
+              },
+              async submitSmsCode() {
+                  if (!this.smsChallenge || this.smsCode.length < 4) return;
+                  this.smsSubmitting = true;
+                  this.smsError = '';
+                  try {
+                      const res = await fetch('/api/sms/submit', {
+                          method: 'POST',
+                          headers: {'Content-Type': 'application/json'},
+                          body: JSON.stringify({
+                              challenge_id: this.smsChallenge.challenge_id,
+                              code: this.smsCode
+                          })
+                      });
+                      const data = await res.json();
+                      if (!res.ok || !data.ok) {
+                          throw new Error(data.error || '提交验证码失败');
+                      }
+                      this.smsChallenge.status = 'verifying';
+                      this.smsCode = '';
+                  } catch (e) {
+                      this.smsSubmitting = false;
+                      this.smsError = e.message || '提交验证码失败，请重试';
+                  }
+              },
+              formatSmsCountdown(seconds) {
+                  const value = Math.max(0, Number(seconds) || 0);
+                  const minutes = Math.floor(value / 60);
+                  const remain = String(value % 60).padStart(2, '0');
+                  return `${minutes}:${remain}`;
               },
               getScoreClass(score) {
                   if (!score) return '';
